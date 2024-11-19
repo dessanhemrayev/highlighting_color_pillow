@@ -36,7 +36,7 @@ def text_highlighting_colors(
     
     try:
         font = ImageFont.truetype(font_src, size_font)
-     except FileNotFoundError:
+    except FileNotFoundError:
         logging.error(f"Font file '{font_src}' not found.")
         raise ImageProcessingError(f"Failed to load font: {font_src}")
          
