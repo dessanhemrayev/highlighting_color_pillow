@@ -24,9 +24,18 @@ def text_highlighting_colors(
         highlighting_color (tuple): Color of highlighting.
 
     """
-    image = Image.open(image_src)
+    try:
+        image = Image.open(image_src)
+    except FileNotFoundError:
+        print(f"Image file '{image_src}' not found.")
+        return
+    
     draw = ImageDraw.Draw(image)
-    font = ImageFont.truetype(font_src, size_font)
+    try:
+        font = ImageFont.truetype(font_src, size_font)
+    except IOError:
+        print(f"Font file '{font_src}' not found.")
+        return
     y = 0 
     bbox = draw.textbbox(position_text, text_origin, font=font,align=text_align)
     xx,yy,x1 = bbox[0:3]
@@ -50,14 +59,15 @@ def text_highlighting_colors(
     image.save("image_highlighting_colors.png")
 
 
-size = 100
-image = "tnc_48980557.jpg"
-font = "Lobster-Regular.ttf"
-position = (1000, 1000)
-text = "Hello\nworld\nPillow Python"
-align = "center"
-text_color = "#FF1827"
-highlighting_color = "#18D8FF"
-text_highlighting_colors(
-    image, font, size, position, text, align, text_color, highlighting_color
-)
+if __name__ == "__main__":
+    size = 100
+    image = "tnc_48980557.jpg"
+    font = "Lobster-Regular.ttf"
+    position = (1000, 1000)
+    text = "Hello\nworld\nPillow Python"
+    align = "center"
+    text_color = "#FF1827"
+    highlighting_color = "#18D8FF"
+    text_highlighting_colors(
+        image, font, size, position, text, align, text_color, highlighting_color
+    )
