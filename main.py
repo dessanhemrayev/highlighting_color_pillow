@@ -1,5 +1,9 @@
 from PIL import Image, ImageDraw, ImageFont
+import logging
 
+class ImageProcessingError(Exception):
+    """Custom exception for image processing errors."""
+    pass
 
 def text_highlighting_colors(
     image_src,
@@ -27,15 +31,16 @@ def text_highlighting_colors(
     try:
         image = Image.open(image_src)
     except FileNotFoundError:
-        print(f"Image file '{image_src}' not found.")
-        return
+        logging.error(f"Image file '{image_src}' not found.")
+        raise ImageProcessingError(f"Failed to load image: {image_src}")
     
-    draw = ImageDraw.Draw(image)
     try:
         font = ImageFont.truetype(font_src, size_font)
-    except IOError:
-        print(f"Font file '{font_src}' not found.")
-        return
+     except FileNotFoundError:
+        logging.error(f"Font file '{font_src}' not found.")
+        raise ImageProcessingError(f"Failed to load font: {font_src}")
+         
+    draw = ImageDraw.Draw(image)
     y = 0 
     bbox = draw.textbbox(position_text, text_origin, font=font,align=text_align)
     xx,yy,x1 = bbox[0:3]
