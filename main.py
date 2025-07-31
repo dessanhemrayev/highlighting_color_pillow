@@ -8,7 +8,7 @@ app = gr.Interface(
     fn=text_highlighting_colors,
     title="Hello",
     inputs=[
-        Textbox(label="Size"),
+        gr.Number(label="Size"),
         Image(label="Image", format="jpg", sources=["upload", "webcam", "clipboard"]),
         UploadButton(label="Font"),
         Textbox(label="Position"),
