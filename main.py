@@ -1,78 +1,69 @@
-from PIL import Image, ImageDraw, ImageFont
-import logging
+from pillow_extension import text_highlighting_colors
+import gradio as gr
 
-class ImageProcessingError(Exception):
-    """Custom exception for image processing errors."""
-    pass
+from gradio.components import Textbox, Image, UploadButton, CheckboxGroup
 
-def text_highlighting_colors(
-    image_src,
-    font_src,
-    size_font,
-    position_text,
-    text_origin,
-    text_align,
-    text_color,
-    highlighting_color,
+
+def process_image_highlighting(
+    size, image, font_file, position_str, text, align, text_color, highlighting_color
 ):
-    """Highlight text in image.
-
-    Args:
-        image_src (str): Path to image.
-        font_src (str): Path to font.
-        size_font (int): Size of font.
-        position_text (tuple): Position of text.
-        text_origin (str): Text to highlight.
-        text_align (str): Text alignment.
-        text_color (tuple): Color of text.
-        highlighting_color (tuple): Color of highlighting.
-
-    """
+    """Wrapper function to handle Gradio inputs and call text_highlighting_colors."""
     try:
-        image = Image.open(image_src)
-    except FileNotFoundError:
-        logging.error(f"Image file '{image_src}' not found.")
-        raise ImageProcessingError(f"Failed to load image: {image_src}")
-    
-    try:
-        font = ImageFont.truetype(font_src, size_font)
-    except FileNotFoundError:
-        logging.error(f"Font file '{font_src}' not found.")
-        raise ImageProcessingError(f"Failed to load font: {font_src}")
-         
-    draw = ImageDraw.Draw(image)
-    y = 0 
-    bbox = draw.textbbox(position_text, text_origin, font=font,align=text_align)
-    xx,yy,x1 = bbox[0:3]
-    text2 = text_origin.split('\n')
-    for item in text2:
-        font_width, _ = font.getsize(item)
+        # Validate inputs
+        if not position_str or "," not in position_str:
+            raise ValueError("Position must be in format 'x,y'")
+        if not image:
+            raise ValueError("Image is required")
+        if not font_file:
+            raise ValueError("Font file is required")
 
-        if text_align == 'right':
-            left, top, right, bottom = draw.textbbox((x1-font_width,yy+y), item, font=font)
-            draw.rectangle((left-5, top-5, right+5, bottom+5), fill=highlighting_color)
-            draw.text((x1-font_width,yy+y), item, font=font, fill=text_color)
-        elif text_align == 'center':
-            left, top, right, bottom = draw.textbbox((xx/2-font_width/2+x1/2,yy+y), item, font=font)
-            draw.rectangle((left-5, top-5, right+5, bottom+5), fill=highlighting_color)
-            draw.text((xx/2-font_width/2+x1/2,yy+y), item, font=font, fill=text_color)
-        else:
-            left, top, right, bottom = draw.textbbox((xx,yy+y), item, font=font)
-            draw.rectangle((left-5, top-5, right+5, bottom+5), fill=highlighting_color)
-            draw.text((xx,yy+y), item, font=font, fill=text_color)
-        y += size_font
-    image.save("image_highlighting_colors.png")
+        # Convert position string to tuple
+        x, y = map(int, position_str.split(","))
+        position = (x, y)
+
+        # Handle uploaded image and font files
+        image_path = image if isinstance(image, str) else image.name
+        font_path = font_file if isinstance(font_file, str) else font_file.name
+        result_path = text_highlighting_colors(
+            image_path,
+            font_path,
+            int(size),
+            position,
+            text,
+            align[0] if align else "left",
+            text_color,
+            highlighting_color,
+        )
+        return result_path
+    except Exception as e:
+        raise gr.Error(f"Processing failed: {str(e)}") from e
+
+
+app = gr.Interface(
+    fn=process_image_highlighting,
+    title="Extension for the Pillow library",
+    inputs=[
+        gr.Number(label="Font Size", value=100),
+        Image(
+            label="Image",
+            format="jpg",
+            type="filepath",
+            sources=["upload", "webcam", "clipboard"],
+        ),
+        UploadButton(label="Font"),
+        Textbox(
+            label="Position (x,y)", value="1000,1000", placeholder="x,y coordinates"
+        ),
+        Textbox(label="Text", value="Hello\nworld\nPillow Python"),
+        CheckboxGroup(
+            label="Align", choices=["left", "center", "right"], value="center"
+        ),
+        gr.ColorPicker(label="Text Color", value="#FF1827"),
+        gr.ColorPicker(label="Highlighting Color", value="#18D8FF"),
+    ],
+    outputs=["image"],
+)
 
 
 if __name__ == "__main__":
-    size = 100
-    image = "tnc_48980557.jpg"
-    font = "Lobster-Regular.ttf"
-    position = (1000, 1000)
-    text = "Hello\nworld\nPillow Python"
-    align = "center"
-    text_color = "#FF1827"
-    highlighting_color = "#18D8FF"
-    text_highlighting_colors(
-        image, font, size, position, text, align, text_color, highlighting_color
-    )
+    app.launch()
