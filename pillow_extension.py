@@ -46,7 +46,9 @@ def text_highlighting_colors(
     xx,yy,x1 = bbox[0:3]
     text2 = text_origin.split('\n')
     for item in text2:
-        font_width, _ = font.getsize(item)
+        # font_width, _ = font.getsize(item)
+        bbox = draw.textbbox((0, 0), item, font=font)
+        font_width, _ = bbox[2] - bbox[0], bbox[3] - bbox[1]
 
         if text_align == 'right':
             left, top, right, bottom = draw.textbbox((x1-font_width,yy+y), item, font=font)
@@ -61,4 +63,5 @@ def text_highlighting_colors(
             draw.rectangle((left-5, top-5, right+5, bottom+5), fill=highlighting_color)
             draw.text((xx,yy+y), item, font=font, fill=text_color)
         y += size_font
-    image.save("image_highlighting_colors.png")
+    # image.save("image_highlighting_colors.png")
+    return image
