@@ -36,7 +36,7 @@ def process_image_highlighting(
         )
         return result_path
     except Exception as e:
-        raise gr.Error(f"Processing failed: {str(e)}")
+        raise gr.Error(f"Processing failed: {str(e)}") from e
 
 
 app = gr.Interface(
